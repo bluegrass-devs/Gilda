@@ -1,0 +1,10 @@
+schema_version: 20180708
+name: events
+version: 0.0.25
+runtime: python
+entrypoint: /python/bin/fdk /function/func.py handler
+memory: 256
+triggers:
+- name: events
+  type: http
+  source: /events
