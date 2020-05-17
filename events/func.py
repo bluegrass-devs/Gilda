@@ -6,6 +6,9 @@ import requests
 
 from fdk import response
 
+local_dev = os.environ.get('is_local')
+logger = logging.getLogger()
+
 
 def handle_member_join_channel(event):
     random_channel_id = os.environ.get('random_channel_id')
@@ -17,12 +20,16 @@ def handle_member_join_channel(event):
 def post_welcome(event):
     user_id = event['user']
     message = f"Howdy <@{user_id}> 👋🤠"
+    webhook_url = os.environ.get('webhook_url')
 
-    r = requests.post(os.environ.get('webhook_url'), json={"text": message})
+    if not local_dev:
+        r = requests.post(webhook_url, json={"text": message})
+    else:
+        logger.debug(f"------------- posting {message} to url {webhook_url}")
+
 
 
 def handler(ctx, data: io.BytesIO=None):
-    logger = logging.getLogger()
     logger.debug("------------- Launching function --------------")
 
     event = None
