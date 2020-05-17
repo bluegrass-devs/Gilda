@@ -38,16 +38,15 @@ def handler(ctx, data: io.BytesIO=None):
         body = json.loads(data.getvalue())
         event = body.get("event")
         event_response = json.dumps({
-            "token": body.get("token"),
-            "challenge": body.get("challenge"),
-            "type": body.get("type")
+            "challenge": body.get("challenge")
         })
     except (Exception, ValueError) as ex:
         print(str(ex))
 
-    logger.debug(f"------------- event {event}")
-    if (event["type"] == "member_joined_channel"):
-        handle_member_join_channel(event)
+    if event:
+        logger.debug(f"------------- event {event}")
+        if (event["type"] == "member_joined_channel"):
+            handle_member_join_channel(event)
 
 
     return response.Response(
