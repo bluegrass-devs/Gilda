@@ -40,11 +40,18 @@ resource "oci_identity_policy" "api_gateway_policy" {
 }
 
 resource "oci_core_vcn" "function_vcn" {
-    #Required
     cidr_block = "10.0.0.0/16"
     compartment_id = "${var.tenancy_ocid}"
       display_name = "gilda_vcn"
-    # TODO: add security list
+}
+
+resource "oci_core_default_route_table" "functions_route_table" {
+    manage_default_resource_id = "${oci_core_vcn.function_vcn.default_route_table_id}"
+
+    route_rules {
+        network_entity_id = "${oci_core_internet_gateway.function_internet_gateway.id}"
+        cidr_block = "0.0.0.0/0"
+    }
 }
 
 resource "oci_core_subnet" "function_subnet" {
@@ -54,12 +61,22 @@ resource "oci_core_subnet" "function_subnet" {
     display_name = "gilda_vcn"
 }
 
+resource "oci_core_default_security_list" "function_security_list" {
+    manage_default_resource_id = "${oci_core_vcn.function_vcn.default_security_list_id}"
+    egress_security_rules {
+        destination = "0.0.0.0/0"
+        protocol = "all"
+    }
+    ingress_security_rules {
+        # TODO: lock this down better
+        protocol = "all"
+        source = "0.0.0.0/0"
+    }
+}
+
 resource "oci_core_internet_gateway" "function_internet_gateway" {
-    #Required
     compartment_id = "${var.tenancy_ocid}"
     vcn_id = "${oci_core_vcn.function_vcn.id}"
-    # TODO: add routing gateway
-
     enabled = "true"
 }
 
@@ -70,6 +87,16 @@ resource "oci_functions_application" "test_application" {
 
     config = "${var.application_config}"
 }
+
+resource "oci_apigateway_gateway" "function_gateway" {
+    compartment_id = "${var.tenancy_ocid}"
+    endpoint_type = "PUBLIC"
+    subnet_id = "${oci_core_subnet.function_subnet.id}"
+
+    display_name = "Gilda Gateway"
+}
+
+# TODO: build a api gateway deployment
 
 # TODO: Create Repository
 
