@@ -1,4 +1,7 @@
 # Gilda
+
+![Build](https://github.com/bluegrass-devs/Gilda/workflows/Python%20package/badge.svg?branch=master)
+
 A simple bot for the Bluegrass Developers guild .... Gilda. or should it be Guilda? 🤷‍♂️
 
 Please feel free to submit PRs for any issues, errors, and/or additional functionality. Before doing so see the [code of conduct](CODE_OF_CONDUCT.md).
