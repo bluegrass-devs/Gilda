@@ -1,10 +1,13 @@
 # Gilda
-A simple learning/bot for the Bluegrass Developers guild .... Gilda. or should it be Guilda? 🤷‍♂️
+A simple bot for the Bluegrass Developers guild .... Gilda. or should it be Guilda? 🤷‍♂️
+
+Please feel free to submit PRs for any issues, errors, and/or additional functionality. Before doing so see the [code of conduct](CODE_OF_CONDUCT.md).
+
 
 ## build new functions
 
-* `fn init --runtime python --trigger http events`
-* `fn list triggers gilda `
+* `fn init --runtime python --trigger http <function name>`
+* `fn list triggers gilda` should list the http trigger for the new event
 
 ## Running locally
 
@@ -34,3 +37,5 @@ or simply good old fashioned curl, like your mother taught you:
 ```
 curl -X "POST" -H "Content-Type: application/json" -d '{ "type": "url_verification","token": "JRoGaO6sIgohYqywBlT3Q0vz","challenge": "wnxwuwy1LjvmMB7HWTV3M2KRiYDhQgeLqlxhT2064MIvVFtOYTN1", "event": {"type": "member_joined_channel", "channel":"<some_id>", "user": "<some_url>"} }'  http://localhost:8080/t/gilda/events
 ```
+
+Or use [Insomnia Core](https://insomnia.rest/) and import the `insomnia_export.json`
