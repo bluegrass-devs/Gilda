@@ -23,13 +23,12 @@ def post_welcome(event):
     webhook_url = os.environ.get('webhook_url')
 
     if not local_dev:
-        r = requests.post(webhook_url, json={"text": message})
+        requests.post(webhook_url, json={"text": message})
     else:
         logger.debug(f"------------- posting {message} to url {webhook_url}")
 
 
-
-def handler(ctx, data: io.BytesIO=None):
+def handler(ctx, data: io.BytesIO = None):
     logger.debug("------------- Launching function --------------")
 
     event = None
@@ -47,7 +46,6 @@ def handler(ctx, data: io.BytesIO=None):
         logger.debug(f"------------- event {event}")
         if (event["type"] == "member_joined_channel"):
             handle_member_join_channel(event)
-
 
     return response.Response(
         ctx, response_data=event_response,
