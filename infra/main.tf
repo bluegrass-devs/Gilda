@@ -96,6 +96,33 @@ resource "oci_apigateway_gateway" "function_gateway" {
     display_name = "Gilda Gateway"
 }
 
+variable "table_ddl_statement" {
+  default = "CREATE TABLE IF NOT EXISTS learning_posts(url STRING, last_posted_at TIMESTAMP(0), info JSON, PRIMARY KEY(url))"
+}
+
+resource "oci_nosql_table" "learning_table" {
+    compartment_id = "${var.tenancy_ocid}"
+    ddl_statement = "${var.table_ddl_statement}"
+    name = "learning_posts"
+    table_limits {
+        #Required
+        max_read_units = "10"
+        max_storage_in_gbs = "1"
+        max_write_units = "10"
+    }
+}
+
+resource "oci_nosql_index" "url_index" {
+    keys {
+        column_name = "url"
+    }
+    name = "url_index"
+    table_name_or_id = "${oci_nosql_table.learning_table.id}"
+
+    compartment_id = "${var.tenancy_ocid}"
+    is_if_not_exists = "true"
+}
+
 # TODO: build a api gateway deployment
 
 # TODO: Create Repository
