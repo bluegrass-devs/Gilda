@@ -1,0 +1,11 @@
+schema_version: 20180708
+name: learning
+version: 0.0.5
+runtime: python
+entrypoint: /python/bin/fdk /function/func.py handler
+type: async
+memory: 256
+triggers:
+- name: learning
+  type: http
+  source: /learning

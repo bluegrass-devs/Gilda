@@ -112,6 +112,8 @@ resource "oci_nosql_table" "learning_table" {
     }
 }
 
+# TODO: dynamic groups and policy
+
 # TODO: build a api gateway deployment
 
 # TODO: Create Repository
