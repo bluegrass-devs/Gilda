@@ -97,7 +97,7 @@ resource "oci_apigateway_gateway" "function_gateway" {
 }
 
 variable "table_ddl_statement" {
-  default = "CREATE TABLE IF NOT EXISTS learning_posts(url STRING, last_posted_at TIMESTAMP(0), info JSON, PRIMARY KEY(url))"
+  default = "CREATE TABLE IF NOT EXISTS learning_posts(uuid STRING, url STRING, last_posted_at TIMESTAMP(0), info JSON, PRIMARY KEY(uuid))"
 }
 
 resource "oci_nosql_table" "learning_table" {
@@ -110,17 +110,6 @@ resource "oci_nosql_table" "learning_table" {
         max_storage_in_gbs = "1"
         max_write_units = "10"
     }
-}
-
-resource "oci_nosql_index" "url_index" {
-    keys {
-        column_name = "url"
-    }
-    name = "url_index"
-    table_name_or_id = "${oci_nosql_table.learning_table.id}"
-
-    compartment_id = "${var.tenancy_ocid}"
-    is_if_not_exists = "true"
 }
 
 # TODO: build a api gateway deployment
