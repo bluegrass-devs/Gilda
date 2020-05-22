@@ -6,6 +6,12 @@ A simple bot for the Bluegrass Developers guild .... Gilda. or should it be Guil
 
 Please feel free to submit PRs for any issues, errors, and/or additional functionality. Before doing so see the [code of conduct](CODE_OF_CONDUCT.md).
 
+## Libraries and tools we use
+
+* [Fn Project](https://fnproject.io/tutorials/python/intro/)
+* [Insomnia Core](https://insomnia.rest/)
+* [Terraform](https://www.terraform.io/intro/index.html)
+* [OCI CLI](https://docs.cloud.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm)
 
 ## build new functions
 
