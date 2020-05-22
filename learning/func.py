@@ -20,10 +20,11 @@ compartment_id = os.environ.get('compartment_id')
 auth_token = os.environ.get('web_auth_token')
 
 TABLE_NAME = "learning_posts"
-
-logger = logging.getLogger()
 slack_client = WebClient(token=slack_bot_token, run_async=True)
 
+FORMAT = '%(asctime)s -- %(message)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger()
 
 # TODO: feed in via env config or db
 learning_sites_rss = [
@@ -64,7 +65,7 @@ def should_post_message(oci_client, post_url):
             should_post = True
     except Exception as ex:
         should_post = False
-        logger.info(f"error: {str(ex)}")
+        logger.error(f"error: {str(ex)}")
 
     return should_post
 
@@ -82,11 +83,11 @@ def update_db(oci_client, post_url):
         oci_client.update_row(TABLE_NAME, update_row_details=row)
     except Exception as ex:
         # TODO: if fail to write to DB alarm
-        logger.info(f"db write error: {str(ex)}")
+        logger.error(f"db write error: {str(ex)}")
 
 
 async def post(site, site_title, post_title, post_url):
-    logger.debug(f"---------- POSTING NEW post to channel {post_url}")
+    logger.debug(f"POSTING new post to channel {post_url}")
     success = False
 
     message_block = [
@@ -115,13 +116,14 @@ async def post(site, site_title, post_title, post_url):
             blocks=message_block)
         success = True
     except SlackApiError as e:
-        logger.info(f"error: {e.response['error']}")
+        logger.error(f"error: {e.response['error']}")
 
     return success
 
 
 async def fetch(client, site):
-    logger.debug(f"------------- fetch {site['url']} --------------")
+    logger.debug(f"fetch {site['url']}")
+
     async with client.get(site['url']) as response:
         r = await response.text()
 
@@ -149,14 +151,14 @@ async def fetch(client, site):
 
 
 async def handler(ctx, data: io.BytesIO = None):
-    logger.debug("------------- Launching function --------------")
+    logger.info("Launching function")
 
     token = None
     try:
         body = json.loads(data.getvalue())
         token = body.get("token")
     except (Exception, ValueError) as ex:
-        print(str(ex))
+        logger.error(f"error; {str(ex)}")
 
     if token != auth_token:
         return response.Response(
