@@ -1,0 +1,22 @@
+[
+  {
+      "url": "https://golangweekly.com/rss/1e3hc386",
+      "channel": "gophers"
+  },
+  {
+      "url": "https://pycoders.com/feed/vTty3IR4",
+      "channel": "python"
+  },
+  {
+      "url": "https://rubyweekly.com/rss/20a549il",
+      "channel": "ruby"
+  },
+  {
+      "url": "https://this-week-in-rust.org/rss.xml",
+      "channel": "rust"
+  },
+  {
+      "url": "https://javascriptweekly.com/rss/1o834e3a",
+      "channel": "webhook_testing"
+  }
+]

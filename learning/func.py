@@ -26,29 +26,13 @@ FORMAT = '%(asctime)s -- %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger()
 
-# TODO: feed in via env config or db
-learning_sites_rss = [
-    {
-        "url": "https://golangweekly.com/rss/1e3hc386",
-        "channel": "gophers"
-    },
-    {
-        "url": "https://pycoders.com/feed/vTty3IR4",
-        "channel": "python"
-    },
-    {
-        "url": "https://rubyweekly.com/rss/20a549il",
-        "channel": "ruby"
-    },
-    {
-        "url": "https://this-week-in-rust.org/rss.xml",
-        "channel": "rust"
-    },
-    {
-        "url": "https://javascriptweekly.com/rss/1o834e3a",
-        "channel": "javascript"
-    }
-]
+
+def load_learning_sites():
+    sites = []
+    with open('./learnings.json') as file:
+        sites = json.load(file)
+
+    return sites
 
 
 def should_post_message(oci_client, post_url):
@@ -87,7 +71,7 @@ def update_db(oci_client, post_url):
 
 
 async def post(site, site_title, post_title, post_url):
-    logger.debug(f"POSTING new post to channel {post_url}")
+    logger.debug(f"POSTING new post {post_url} to channel {site['channel']}")
     success = False
 
     message_block = [
@@ -167,8 +151,10 @@ async def handler(ctx, data: io.BytesIO = None):
             headers={"Content-Type": "application/json"}
         )
 
+    learning_sites = load_learning_sites()
+
     async with aiohttp.ClientSession() as client:
-        await asyncio.gather(*(fetch(client, site) for site in learning_sites_rss))
+        await asyncio.gather(*(fetch(client, site) for site in learning_sites))
 
     return response.Response(
         ctx, response_data=json.dumps(
