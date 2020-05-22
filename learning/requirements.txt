@@ -1,0 +1,6 @@
+fdk
+requests==2.22.0
+aiohttp==3.6.2
+feedparser==5.2.1
+oci==2.14.3
+slackclient==2.5.0
