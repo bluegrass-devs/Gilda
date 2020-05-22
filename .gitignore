@@ -3,3 +3,7 @@ terraform.tfvars
 .terraform
 .terraform.tfstate*
 terraform.tfstate*
+
+# private info
+oci_api_key.pem
+oci_config
