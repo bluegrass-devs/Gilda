@@ -13,7 +13,7 @@ check:
 	@echo "docker: installed at ${DOCKER}"
 	@[ -n "${FN}" ] || (echo "missing fn" && exit 1)
 	@echo "fn: installed at ${FN}"
-	@$(DOCKER) ps -q > /dev/null ; [ $$? ] || (echo "docker cant reach server" ; exit 1)
+	@$(DOCKER) ps -q > /dev/null || (echo "docker cant reach server" ; exit 1)
 	@echo "docker-host: running"
 	@[ $$(${FN} version | grep --count ?) == 0 ] || (echo "fn server not running" && exit 1)
 	@echo "fn-server: running"
