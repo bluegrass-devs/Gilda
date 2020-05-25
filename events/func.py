@@ -7,6 +7,7 @@ import requests
 import uuid
 
 import asyncio
+import fdk
 import oci
 
 from fdk import response
