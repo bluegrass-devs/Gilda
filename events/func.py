@@ -85,7 +85,7 @@ async def post_welcome(event):
 
     success = False
 
-    if local_dev:
+    if not local_dev:
         try:
             await slack_client.chat_postMessage(
                 channel=event['channel'],
