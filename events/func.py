@@ -1,10 +1,7 @@
-import datetime
 import io
 import os
 import json
 import logging
-import requests
-import uuid
 
 import asyncio
 import fdk
@@ -17,7 +14,6 @@ from slack.errors import SlackApiError
 local_dev = os.environ.get('is_local')
 compartment_id = os.environ.get('compartment_id')
 slack_bot_token = os.environ.get('slack_bot_token')
-welcome_channel = os.environ.get('slack_welcome_channel')
 
 FORMAT = '%(asctime)s -- %(message)s'
 logging.basicConfig(format=FORMAT)
@@ -29,39 +25,37 @@ slack_client = WebClient(token=slack_bot_token, run_async=True)
 
 
 def should_post_message(oci_client, event):
-    should_post = False
-
-    details = oci.nosql.models.QueryDetails(
-        compartment_id=compartment_id,
-        statement=f"SELECT * FROM {TABLE_NAME} e where e.event_type = 'member_joined_channel' AND e.data.user = '{event['user']}'"
-    )
-
-    try:
-        query_resp = oci_client.query(limit=1, query_details=details)
-        if len(query_resp.data.items) == 0:
-            should_post = True
-    except Exception as ex:
-        should_post = False
-        logger.error(f"error: {str(ex)}")
+    # Write to DB to block other functions
+    # If write fails event already handled
+    should_post = update_db(oci_client, event)
 
     return should_post
 
 
 def update_db(oci_client, event):
+    updated = False
+
     try:
         row = oci.nosql.models.UpdateRowDetails(
             compartment_id=compartment_id,
+            option="IF_ABSENT",
+            is_get_return_row=True,
             value={
-                "uuid": str(uuid.uuid4()),
-                "last_posted_at": datetime.datetime.now(),
                 "event_type": event["type"],
+                "channel_id": event["channel"],
+                "user_id": event["user"],
                 "data": event
             })
 
-        oci_client.update_row(TABLE_NAME, update_row_details=row)
+        response = oci_client.update_row(TABLE_NAME, update_row_details=row)
+
+        if response.data.existing_version is None:
+            updated = True
     except Exception as ex:
         # TODO: if fail to write to DB alarm
         logger.error(f"db write error: {str(ex)}")
+
+    return updated
 
 
 async def handle_member_join_channel(event):
@@ -81,10 +75,7 @@ async def handle_member_join_channel(event):
 
     if should_post:
 
-        new_message_posted = await post_welcome(event)
-
-        if new_message_posted:
-            update_db(oci_client, event)
+        await post_welcome(event)
 
 
 async def post_welcome(event):
@@ -97,7 +88,7 @@ async def post_welcome(event):
     if local_dev:
         try:
             await slack_client.chat_postMessage(
-                channel=f"#{welcome_channel}",
+                channel=event['channel'],
                 text=message)
             success = True
         except SlackApiError as e:

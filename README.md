@@ -26,7 +26,6 @@ Please feel free to submit PRs for any issues, errors, and/or additional functio
 1. set up two environment variables `
     * `fn cf a gilda random_channel_id <some_id>`
     * `fn cf a gilda webhook_url <some_url>`
-    * `fn cf a gilda slack_welcome_channel <some channel>`
     * if you don't want to post to url `fn cf a gilda is_local True`
 1. deploy locally `fn --verbose deploy --app gilda --all --local --no-bump`
 1. List functions `fn list functions gilda`

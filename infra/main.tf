@@ -113,7 +113,7 @@ resource "oci_nosql_table" "learning_table" {
 }
 
 variable "event_table_ddl_statement" {
-  default = "CREATE TABLE IF NOT EXISTS slack_events(uuid STRING, event_type STRING, last_posted_at TIMESTAMP(0), data JSON, PRIMARY KEY(uuid))"
+  default = "CREATE TABLE IF NOT EXISTS slack_events(event_type STRING, channel_id STRING, user_id STRING, data JSON, PRIMARY KEY(event_type, channel_id, user_id))"
 }
 
 resource "oci_nosql_table" "event_table" {
