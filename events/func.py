@@ -24,12 +24,16 @@ TABLE_NAME = "slack_events"
 slack_client = WebClient(token=slack_bot_token, run_async=True)
 
 
-def should_post_message(oci_client, event):
-    # Write to DB to block other functions
-    # If write fails event already handled
-    should_post = update_db(oci_client, event)
+def init_client():
+    oci_client = None
+    if local_dev:
+        config = oci.config.from_file("./oci_config")
+        oci_client = oci.nosql.NosqlClient(config)
+    else:
+        signer = oci.auth.signers.get_resource_principals_signer()
+        oci_client = oci.nosql.NosqlClient({}, signer=signer)
 
-    return should_post
+    return oci_client
 
 
 def update_db(oci_client, event):
@@ -63,15 +67,11 @@ async def handle_member_join_channel(event):
     if (event["channel"] != random_channel_id):
         return
 
-    oci_client = None
-    if local_dev:
-        config = oci.config.from_file("./oci_config")
-        oci_client = oci.nosql.NosqlClient(config)
-    else:
-        signer = oci.auth.signers.get_resource_principals_signer()
-        oci_client = oci.nosql.NosqlClient({}, signer=signer)
+    oci_client = init_client()
 
-    should_post = should_post_message(oci_client, event)
+    # Write to DB to block other functions
+    # If write fails event already handled
+    should_post = update_db(oci_client, event)
 
     if should_post:
 
@@ -88,7 +88,8 @@ async def post_welcome(event):
     if not local_dev:
         try:
             await slack_client.chat_postMessage(
-                channel=event['channel'],
+                # channel=event['channel'],
+                channel=f"#webhook_testing",
                 text=message)
             success = True
         except SlackApiError as e:
