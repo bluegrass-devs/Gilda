@@ -1,2 +1,4 @@
 fdk
 requests==2.22.0
+oci==2.14.3
+slackclient==2.5.0

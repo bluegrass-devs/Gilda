@@ -112,6 +112,22 @@ resource "oci_nosql_table" "learning_table" {
     }
 }
 
+variable "event_table_ddl_statement" {
+  default = "CREATE TABLE IF NOT EXISTS slack_events(event_type STRING, channel_id STRING, user_id STRING, data JSON, PRIMARY KEY(event_type, channel_id, user_id))"
+}
+
+resource "oci_nosql_table" "event_table" {
+    compartment_id = "${var.tenancy_ocid}"
+    ddl_statement = "${var.event_table_ddl_statement}"
+    name = "slack_events"
+    table_limits {
+        #Required
+        max_read_units = "10"
+        max_storage_in_gbs = "1"
+        max_write_units = "10"
+    }
+}
+
 # TODO: dynamic groups and policy
 
 # TODO: build a api gateway deployment
