@@ -11,7 +11,9 @@ from fdk import response
 from slack import WebClient
 from slack.errors import SlackApiError
 
-local_dev = os.environ.get('is_local')
+local_dev = os.getenv('is_local', False)
+local_oci_config = os.getenv('local_oci_config', False)
+
 compartment_id = os.environ.get('compartment_id')
 slack_bot_token = os.environ.get('slack_bot_token')
 
@@ -26,7 +28,7 @@ slack_client = WebClient(token=slack_bot_token, run_async=True)
 
 def init_client():
     oci_client = None
-    if local_dev:
+    if local_oci_config:
         config = oci.config.from_file("./oci_config")
         oci_client = oci.nosql.NosqlClient(config)
     else:
@@ -39,25 +41,33 @@ def init_client():
 def update_db(oci_client, event):
     updated = False
 
-    try:
-        row = oci.nosql.models.UpdateRowDetails(
-            compartment_id=compartment_id,
-            option="IF_ABSENT",
-            is_get_return_row=True,
-            value={
-                "event_type": event["type"],
-                "channel_id": event["channel"],
-                "user_id": event["user"],
-                "data": event
-            })
+    if local_dev:
+        # Local dev we can assume most of the time the event will
+        # be updated in the db. This simulates a new record
+        updated = True
+    else:
+        try:
+            row = oci.nosql.models.UpdateRowDetails(
+                compartment_id=compartment_id,
+                option="IF_ABSENT",
+                is_get_return_row=True,
+                value={
+                    "event_type": event["type"],
+                    "channel_id": event["channel"],
+                    "user_id": event["user"],
+                    "data": event
+                })
 
-        response = oci_client.update_row(TABLE_NAME, update_row_details=row)
+            response = oci_client.update_row(
+                TABLE_NAME,
+                update_row_details=row
+            )
 
-        if response.data.existing_version is None:
-            updated = True
-    except Exception as ex:
-        # TODO: if fail to write to DB alarm
-        logger.error(f"db write error: {str(ex)}")
+            if response.data.existing_version is None:
+                updated = True
+        except Exception as ex:
+            # TODO: if fail to write to DB alarm
+            logger.error(f"db write error: {str(ex)}")
 
     return updated
 
@@ -74,18 +84,22 @@ async def handle_member_join_channel(event):
     should_post = update_db(oci_client, event)
 
     if should_post:
-
-        await post_welcome(event)
+        success = await post_welcome(event)
+        if not success:
+            raise NameError("postingWelcomeFail")
+    else:
+        logger.debug("Nothing to post. The user join is already in the DB.")
 
 
 async def post_welcome(event):
     user_id = event['user']
     message = f"Howdy <@{user_id}> 👋🤠"
-    webhook_url = os.environ.get('webhook_url')
 
     success = False
 
-    if not local_dev:
+    if local_dev:
+        logger.debug(f"posting message: {message}")
+    else:
         try:
             await slack_client.chat_postMessage(
                 channel=event['channel'],
@@ -93,8 +107,6 @@ async def post_welcome(event):
             success = True
         except SlackApiError as e:
             logger.error(f"error: {e.response['error']}")
-    else:
-        logger.debug(f"posting {message} to url {webhook_url}")
 
     return success
 

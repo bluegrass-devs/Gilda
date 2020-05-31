@@ -23,10 +23,15 @@ Please feel free to submit PRs for any issues, errors, and/or additional functio
 1. start the local server `fn start --log-level debug`
 1. Make sure you have a local app `fn list apps`
     * if not create one `fn create app gilda`
-1. set up two environment variables `
+1. set up environment variables
     * `fn cf a gilda random_channel_id <some_id>`
-    * `fn cf a gilda webhook_url <some_url>`
-    * if you don't want to post to url `fn cf a gilda is_local True`
+    * `fn cf a gilda slack_bot_token <some token>`
+    * `fn cf a gilda compartment_id <oracle OCID>`
+    * `fn cf a gilda web_auth_token auth_1234`
+    * `fn cf a gilda local_oci_config True`
+    * if you don't want to post to url `fn cf a gilda is_local True` to delete `fn cf a gilda is_local ""`
+    * to use OCI locally `fn cf a gilda local_oci_config True` to delete `fn cf a gilda local_oci_config ""`
+
 1. deploy locally `fn --verbose deploy --app gilda --all --local --no-bump`
 1. List functions `fn list functions gilda`
 1. Grab local url `fn inspect function gilda events`
@@ -46,7 +51,7 @@ or simply good old fashioned curl, like your mother taught you:
 ```
 curl -X "POST" -H "Content-Type: application/json" -d '{ "type": "url_verification","token": "JRoGaO6sIgohYqywBlT3Q0vz","challenge": "wnxwuwy1LjvmMB7HWTV3M2KRiYDhQgeLqlxhT2064MIvVFtOYTN1", "event": {"type": "member_joined_channel", "channel":"<some_id>", "user": "<some_url>"} }'  http://localhost:8080/t/gilda/events
 
-curl -X "POST" -H "Content-Type: application/json" -d '{"token": "1234"}' http://localhost:8080/t/gilda/learning
+curl -X "POST" -H "Content-Type: application/json" -d '{"token": "auth_1234"}' http://localhost:8080/t/gilda/learning
 ```
 
 Or use [Insomnia Core](https://insomnia.rest/) and import the `insomnia_export.json`
