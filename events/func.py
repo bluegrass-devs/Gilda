@@ -88,8 +88,7 @@ async def post_welcome(event):
     if not local_dev:
         try:
             await slack_client.chat_postMessage(
-                # channel=event['channel'],
-                channel=f"#webhook_testing",
+                channel=event['channel'],
                 text=message)
             success = True
         except SlackApiError as e:
