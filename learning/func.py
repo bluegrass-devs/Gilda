@@ -15,7 +15,9 @@ from fdk import response
 from slack import WebClient
 from slack.errors import SlackApiError
 
-local_dev = os.environ.get('is_local')
+local_dev = os.getenv('is_local', False)
+local_oci_config = os.getenv('local_oci_config', False)
+
 slack_bot_token = os.environ.get('slack_bot_token')
 compartment_id = os.environ.get('compartment_id')
 auth_token = os.environ.get('web_auth_token')
@@ -26,6 +28,18 @@ slack_client = WebClient(token=slack_bot_token, run_async=True)
 FORMAT = '%(asctime)s -- %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger()
+
+
+def init_client():
+    oci_client = None
+    if local_oci_config:
+        config = oci.config.from_file("./oci_config")
+        oci_client = oci.nosql.NosqlClient(config)
+    else:
+        signer = oci.auth.signers.get_resource_principals_signer()
+        oci_client = oci.nosql.NosqlClient({}, signer=signer)
+
+    return oci_client
 
 
 def load_learning_sites():
@@ -44,31 +58,39 @@ def should_post_message(oci_client, post_url):
         statement=f"SELECT * FROM {TABLE_NAME} where url = '{post_url}'"
     )
 
-    try:
-        query_resp = oci_client.query(limit=1, query_details=details)
-        if len(query_resp.data.items) == 0:
-            should_post = True
-    except Exception as ex:
-        should_post = False
-        logger.error(f"error: {str(ex)}")
+    if local_dev:
+        logger.debug(f"QueryDetails for {repr(details)}")
+        should_post = True
+    else:
+        try:
+            query_resp = oci_client.query(limit=1, query_details=details)
+            if len(query_resp.data.items) == 0:
+                should_post = True
+        except Exception as ex:
+            should_post = False
+            logger.error(f"error: {str(ex)}")
 
     return should_post
 
 
 def update_db(oci_client, post_url):
-    try:
-        row = oci.nosql.models.UpdateRowDetails(
-            compartment_id=compartment_id,
-            value={
-                "uuid": str(uuid.uuid4()),
-                "last_posted_at": datetime.datetime.now(),
-                "url": f"{post_url}"
-            })
+    row = oci.nosql.models.UpdateRowDetails(
+        compartment_id=compartment_id,
+        value={
+            "uuid": str(uuid.uuid4()),
+            "last_posted_at": datetime.datetime.now(),
+            "url": f"{post_url}"
+        }
+    )
 
-        oci_client.update_row(TABLE_NAME, update_row_details=row)
-    except Exception as ex:
-        # TODO: if fail to write to DB alarm
-        logger.error(f"db write error: {str(ex)}")
+    if local_dev:
+        logger.debug(f"Update {TABLE_NAME} with {repr(row.value)}")
+    else:
+        try:
+            oci_client.update_row(TABLE_NAME, update_row_details=row)
+        except Exception as ex:
+            # TODO: if fail to write to DB alarm
+            logger.error(f"db write error: {str(ex)}")
 
 
 async def post(site, site_title, post_title, post_url):
@@ -95,13 +117,17 @@ async def post(site, site_title, post_title, post_url):
         },
     ]
 
-    try:
-        await slack_client.chat_postMessage(
-            channel=f"#{site['channel']}",
-            blocks=message_block)
+    if local_dev:
+        logger.debug(f"message post to #{site['channel']} with block {message_block}")
         success = True
-    except SlackApiError as e:
-        logger.error(f"error: {e.response['error']}")
+    else:
+        try:
+            await slack_client.chat_postMessage(
+                channel=f"#{site['channel']}",
+                blocks=message_block)
+            success = True
+        except SlackApiError as e:
+            logger.error(f"error: {e.response['error']}")
 
     return success
 
@@ -117,13 +143,7 @@ async def fetch(client, site):
         post_title = d['entries'][0]['title']
         post_url = d['entries'][0]['link']
 
-        oci_client = None
-        if local_dev:
-            config = oci.config.from_file("./oci_config")
-            oci_client = oci.nosql.NosqlClient(config)
-        else:
-            signer = oci.auth.signers.get_resource_principals_signer()
-            oci_client = oci.nosql.NosqlClient({}, signer=signer)
+        oci_client = init_client()
 
         should_post = should_post_message(oci_client, post_url)
 
