@@ -26,6 +26,12 @@ Please feel free to submit PRs for any issues, errors, and/or additional functio
 - [Insomnia Core](https://insomnia.rest/)
 - [Terraform](https://www.terraform.io/intro/index.html)
 - [OCI CLI](https://docs.cloud.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm)
+- [Slack Events API](https://api.slack.com/events-api)
+  - [Event types](https://api.slack.com/events-api#event_types)
+
+    Current events we are using
+
+    - [member_joined_channel](https://api.slack.com/events/member_joined_channel)
 
 ## Useful commands
 
