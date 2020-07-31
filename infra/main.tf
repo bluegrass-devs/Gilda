@@ -122,7 +122,7 @@ resource "oci_nosql_table" "event_table" {
     name = "slack_events"
     table_limits {
         #Required
-        max_read_units = "10"
+        max_read_units = "100"
         max_storage_in_gbs = "1"
         max_write_units = "10"
     }
